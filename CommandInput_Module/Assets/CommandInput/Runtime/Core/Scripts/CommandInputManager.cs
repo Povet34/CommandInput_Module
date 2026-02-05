@@ -14,6 +14,10 @@ namespace CommandInput
         [SerializeField] private CommandInputConfig inputConfig;
         [SerializeField] private CommandCollection commandCollection;
 
+        [Header("Execute Key")]
+        [Tooltip("커맨드 실행 키 (None이면 자동 실행)")]
+        [SerializeField] private KeyCode executeKey = KeyCode.Space;
+
         [Header("Events")]
         [Tooltip("매칭 중인 커맨드가 변경될 때")]
         public UnityEvent<List<CommandMatchResult>> onMatchingCommandsChanged;
@@ -82,7 +86,6 @@ namespace CommandInput
         /// </summary>
         private void HandleInput()
         {
-            // 아날로그 입력 받기
             Vector2 input = directionalInput.GetDirectionalInput();
 
             // 방향 변화 감지
@@ -91,10 +94,61 @@ namespace CommandInput
                 OnDirectionInput(newDirection);
             }
 
-            // 입력이 중립으로 돌아왔는지 체크
-            if (input.magnitude < inputConfig.deadzone && isInputActive)
+            // 실행 키 체크
+            if (executeKey != KeyCode.None && Input.GetKeyDown(executeKey))
+            {
+                TryExecuteCommand();
+            }
+
+            // 조이스틱 중립 체크 (키보드는 무시)
+            if (IsUsingAnalogInput() && input.magnitude < inputConfig.deadzone && isInputActive)
             {
                 OnInputNeutral();
+            }
+        }
+
+        /// <summary>
+        /// 아날로그 입력(조이스틱) 사용 중인지 체크
+        /// </summary>
+        private bool IsUsingAnalogInput()
+        {
+            Vector2 input = directionalInput.GetDirectionalInput();
+
+            // 키보드는 정확히 (1,0), (0,1) 같은 값
+            // 조이스틱은 (0.87, 0.43) 같은 값
+
+            // 간단한 휴리스틱: x, y가 둘 다 0 또는 1이 아니면 아날로그
+            if (input.magnitude > 0.01f)
+            {
+                float absX = Mathf.Abs(input.x);
+                float absY = Mathf.Abs(input.y);
+
+                bool isDigital = (Mathf.Approximately(absX, 0f) || Mathf.Approximately(absX, 1f)) &&
+                                (Mathf.Approximately(absY, 0f) || Mathf.Approximately(absY, 1f));
+
+                return !isDigital;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// 커맨드 실행 시도
+        /// </summary>
+        private void TryExecuteCommand()
+        {
+            if (!isInputActive)
+                return;
+
+            var completedCommand = commandMatcher.GetBestCompletedMatch();
+            if (completedCommand != null)
+            {
+                ExecuteCommand(completedCommand.command);
+            }
+            else
+            {
+                Debug.Log("<color=yellow>Command not completed</color>");
+                ClearInput();
             }
         }
 
@@ -118,15 +172,6 @@ namespace CommandInput
 
             // 완성된 커맨드 체크
             CheckCompletedCommands();
-
-            // 커맨드 시작 콜백
-            foreach (var match in currentMatches)
-            {
-                if (match.isComplete)
-                {
-                    match.command.onCommandStart?.Invoke();
-                }
-            }
         }
 
         /// <summary>
@@ -142,12 +187,7 @@ namespace CommandInput
             }
             else
             {
-                // 완성 안 됐으면 실패 처리
-                foreach (var match in currentMatches)
-                {
-                    match.command.onCommandFailed?.Invoke();
-                }
-
+                // 완성 안 됐으면 그냥 초기화
                 ClearInput();
             }
         }
@@ -173,10 +213,7 @@ namespace CommandInput
         {
             Debug.Log($"<color=green>Command Executed: {command.displayName}</color>");
 
-            // 커맨드 완성 콜백
-            command.onCommandComplete?.Invoke();
-
-            // 매니저 이벤트
+            // 매니저 이벤트 발생
             onCommandExecuted?.Invoke(command);
 
             // 입력 초기화
@@ -207,12 +244,7 @@ namespace CommandInput
             {
                 Debug.Log("<color=yellow>Input timeout</color>");
 
-                // 실패 콜백
-                foreach (var match in currentMatches)
-                {
-                    match.command.onCommandFailed?.Invoke();
-                }
-
+                // 입력 초기화만
                 ClearInput();
             }
         }

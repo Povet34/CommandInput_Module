@@ -33,16 +33,6 @@ namespace CommandInput
         [Range(0.5f, 5f)]
         public float maxInputDuration = 1.5f;
 
-        [Header("Execution")]
-        [Tooltip("커맨드 입력 시작 시 호출")]
-        public UnityEvent onCommandStart;
-
-        [Tooltip("커맨드 완성 시 호출")]
-        public UnityEvent onCommandComplete;
-
-        [Tooltip("커맨드 실패 시 호출 (타임아웃 등)")]
-        public UnityEvent onCommandFailed;
-
         /// <summary>
         /// 패턴을 화살표 문자열로 변환 (디버깅/UI용)
         /// </summary>

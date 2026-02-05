@@ -17,17 +17,8 @@ MonoBehaviour:
   icon: {fileID: 21300000, guid: b31b519dec05e6e409d6dff881d24987, type: 3}
   pattern: 0e010000000000000e0100005a000000b400000000000000
   matchConfig:
-    similarityThreshold: 0.7
+    similarityThreshold: 0.9
     maxAngleDifference: 45
     allowExtraInputs: 1
     allowSkippedInputs: 0
   maxInputDuration: 2
-  onCommandStart:
-    m_PersistentCalls:
-      m_Calls: []
-  onCommandComplete:
-    m_PersistentCalls:
-      m_Calls: []
-  onCommandFailed:
-    m_PersistentCalls:
-      m_Calls: []
