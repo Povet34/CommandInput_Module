@@ -10,11 +10,11 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8740e5c674db24d4594d298668ca53ec, type: 3}
-  m_Name: NewCommand
+  m_Name: Eagle_Napalm_Airstrike_Stratagem_Command
   m_EditorClassIdentifier: 
   commandId: Orbital_Precision_Strike
   displayName: Orbital Precision Strike
-  icon: {fileID: 0}
+  icon: {fileID: 21300000, guid: be8c347891b6b554081cf89fb983e16e, type: 3}
   pattern: 
   matchConfig:
     similarityThreshold: 0.7
