@@ -62,7 +62,12 @@ namespace CommandInput
         [Tooltip("New Input System용 InputActionAsset")]
         public InputActionAsset inputActions;
 #endif
-        
+
+        [Header("Noise Filtering")]
+        [Tooltip("이 값 이하의 입력은 무시 (New Input System 노이즈 방지)")]
+        [Range(0f, 0.5f)]
+        public float inputNoiseThreshold = 0.2f;
+
         /// <summary>
         /// 현재 설정이 유효한지 검증
         /// </summary>

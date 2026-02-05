@@ -4,10 +4,6 @@ using UnityEngine.InputSystem;
 
 namespace CommandInput
 {
-    /// <summary>
-    /// New Input System을 사용하는 방향 입력 구현
-    /// InputActionAsset 기반으로 동작
-    /// </summary>
     public class NewDirectionalInput : IDirectionalInput
     {
         private readonly CommandInputConfig config;
@@ -21,21 +17,18 @@ namespace CommandInput
         {
             this.config = config;
 
-            // Config에서 InputActionAsset 가져오기
             if (config.inputActions == null)
             {
                 Debug.LogError("CommandInputConfig에 InputActionAsset이 할당되지 않음!");
                 return;
             }
 
-            // InputActionAsset에서 액션 찾기
             upAction = config.inputActions.FindAction("Up");
             downAction = config.inputActions.FindAction("Down");
             leftAction = config.inputActions.FindAction("Left");
             rightAction = config.inputActions.FindAction("Right");
             moveAction = config.inputActions.FindAction("Move");
 
-            // 액션 활성화
             EnableActions();
         }
 
@@ -70,12 +63,16 @@ namespace CommandInput
 
         public Vector2 GetDirectionalInput()
         {
-            return moveAction?.ReadValue<Vector2>() ?? Vector2.zero;
+            Vector2 value = moveAction?.ReadValue<Vector2>() ?? Vector2.zero;
+
+            // 노이즈 필터링: 임계값 이하 입력 무시
+            // Gamepad/Joystick 드리프트나 초기화 노이즈 방지
+            if (value.magnitude < config.inputNoiseThreshold)
+                return Vector2.zero;
+
+            return value;
         }
 
-        /// <summary>
-        /// 리소스 정리
-        /// </summary>
         public void Dispose()
         {
             upAction?.Disable();

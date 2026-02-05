@@ -13,7 +13,7 @@ namespace CommandInput
         private List<InputDirection> directionHistory = new List<InputDirection>();
         private float lastChangeTime;
         private readonly float minChangeInterval;
-
+        
         /// <summary>
         /// 생성자
         /// </summary>
@@ -22,7 +22,7 @@ namespace CommandInput
         {
             this.minChangeInterval = minChangeInterval;
         }
-
+        
         /// <summary>
         /// 방향 입력 업데이트
         /// </summary>
@@ -33,9 +33,9 @@ namespace CommandInput
         public bool UpdateDirection(Vector2 input, CommandInputConfig config, out InputDirection newDirection)
         {
             newDirection = DirectionalInputHelper.Vector2ToDirection(input, config);
-
+            
             // 방향이 변경되고 충분한 시간이 지났는지 확인
-            if (newDirection != currentDirection &&
+            if (newDirection != currentDirection && 
                 Time.time - lastChangeTime >= minChangeInterval)
             {
                 // None이 아닌 방향만 히스토리에 추가
@@ -46,7 +46,7 @@ namespace CommandInput
                     lastChangeTime = Time.time;
                     return true;
                 }
-
+                
                 // None으로 변경된 경우 (입력 중립)
                 if (newDirection == InputDirection.None && currentDirection != InputDirection.None)
                 {
@@ -54,10 +54,10 @@ namespace CommandInput
                     lastChangeTime = Time.time;
                 }
             }
-
+            
             return false;
         }
-
+        
         /// <summary>
         /// 현재 방향 가져오기
         /// </summary>
@@ -65,7 +65,7 @@ namespace CommandInput
         {
             return currentDirection;
         }
-
+        
         /// <summary>
         /// 방향 히스토리 가져오기
         /// </summary>
@@ -73,7 +73,7 @@ namespace CommandInput
         {
             return directionHistory;
         }
-
+        
         /// <summary>
         /// 히스토리를 배열로 가져오기
         /// </summary>
@@ -81,7 +81,7 @@ namespace CommandInput
         {
             return directionHistory.ToArray();
         }
-
+        
         /// <summary>
         /// 히스토리 개수
         /// </summary>
@@ -89,7 +89,7 @@ namespace CommandInput
         {
             return directionHistory.Count;
         }
-
+        
         /// <summary>
         /// 히스토리 초기화
         /// </summary>
@@ -113,7 +113,7 @@ namespace CommandInput
                 arrows[i] = DirectionalInputHelper.DirectionToArrow(directionHistory[i]);
             }
 
-            return string.Join(" → ", arrows);
+            return string.Join(" ", arrows);
         }
     }
 }

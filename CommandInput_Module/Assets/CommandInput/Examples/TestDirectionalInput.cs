@@ -4,21 +4,30 @@ using CommandInput;
 public class TestDirectionalInput : MonoBehaviour
 {
     [SerializeField] private CommandInputConfig config;
+    private IDirectionalInput directionalInput;
+    private DirectionalInputTracker inputTracker;
+
+    void Start()
+    {
+        directionalInput = DirectionalInputFactory.Create(config);
+        inputTracker = new DirectionalInputTracker(config.directionChangeInterval);
+    }
 
     void Update()
     {
-        // 키보드 WASD 또는 화살표 입력
-        float h = Input.GetAxis("Horizontal");
-        float v = Input.GetAxis("Vertical");
-        Vector2 input = new Vector2(h, v);
+        Vector2 input = directionalInput.GetDirectionalInput();
 
-        // 방향 변환
-        InputDirection dir = DirectionalInputHelper.Vector2ToDirection(input, config);
-
-        if (dir != InputDirection.None)
+        // 입력 값 확인
+        if (input != Vector2.zero)
         {
-            string arrow = DirectionalInputHelper.DirectionToArrow(dir);
-            Debug.Log($"Direction: {dir} {arrow}");
+            Debug.Log($"Raw Input: ({input.x:F3}, {input.y:F3})");
+        }
+
+        if (inputTracker.UpdateDirection(input, config, out InputDirection newDirection))
+        {
+            string arrow = DirectionalInputHelper.DirectionToArrow(newDirection);
+            Debug.Log($"Direction Changed: {newDirection} {arrow}");
+            Debug.Log($"History: {inputTracker.GetHistoryString()}");
         }
     }
 }
