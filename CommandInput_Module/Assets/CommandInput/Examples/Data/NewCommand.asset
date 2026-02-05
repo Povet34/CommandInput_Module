@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8740e5c674db24d4594d298668ca53ec, type: 3}
+  m_Name: NewCommand
+  m_EditorClassIdentifier: 
+  commandId: Orbital_Precision_Strike
+  displayName: Orbital Precision Strike
+  icon: {fileID: 0}
+  pattern: 
+  matchConfig:
+    similarityThreshold: 0.7
+    maxAngleDifference: 45
+    allowExtraInputs: 1
+    allowSkippedInputs: 0
+  maxInputDuration: 1.5
+  onCommandStart:
+    m_PersistentCalls:
+      m_Calls: []
+  onCommandComplete:
+    m_PersistentCalls:
+      m_Calls: []
+  onCommandFailed:
+    m_PersistentCalls:
+      m_Calls: []
