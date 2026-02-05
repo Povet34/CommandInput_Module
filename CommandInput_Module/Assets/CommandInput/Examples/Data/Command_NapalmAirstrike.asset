@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8740e5c674db24d4594d298668ca53ec, type: 3}
   m_Name: Command_NapalmAirstrike
   m_EditorClassIdentifier: 
-  commandId: Orbital_Precision_Strike
-  displayName: Orbital Precision Strike
+  commandId: napalm_airstrike
+  displayName: Eagle Napalm Airstrike
   icon: {fileID: 21300000, guid: be8c347891b6b554081cf89fb983e16e, type: 3}
-  pattern: 
+  pattern: 5a000000000000000e0100005a000000
   matchConfig:
     similarityThreshold: 0.7
     maxAngleDifference: 45

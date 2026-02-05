@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8740e5c674db24d4594d298668ca53ec, type: 3}
   m_Name: Command_OrbitalStrike
   m_EditorClassIdentifier: 
-  commandId: Orbital_Precision_Strike_Stratagem
-  displayName: Orbital Precision Strike Stratagem
+  commandId: orbital_strike
+  displayName: Orbital Precision Strike
   icon: {fileID: 21300000, guid: 7ae83348a30d609479dee808fe21e804, type: 3}
-  pattern: 
+  pattern: 00000000000000005a000000
   matchConfig:
     similarityThreshold: 0.7
     maxAngleDifference: 45
