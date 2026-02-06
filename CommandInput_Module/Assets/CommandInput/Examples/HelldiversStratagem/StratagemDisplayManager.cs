@@ -29,6 +29,7 @@ namespace CommandInput.UI
         [Tooltip("매칭 안 되는 카드 딤드 처리 (알파값)")]
         [SerializeField] private float dimmedAlpha = 0.3f;
 
+
         // 카드 관리
         private Dictionary<string, StratagemCardUI> cardMap = new Dictionary<string, StratagemCardUI>();
         private List<StratagemCardUI> allCards = new List<StratagemCardUI>();
@@ -195,13 +196,7 @@ namespace CommandInput.UI
         /// </summary>
         private void SetCardDimmed(StratagemCardUI card, bool dimmed)
         {
-            CanvasGroup canvasGroup = card.GetComponent<CanvasGroup>();
-            if (canvasGroup == null)
-            {
-                canvasGroup = card.gameObject.AddComponent<CanvasGroup>();
-            }
-
-            canvasGroup.alpha = dimmed ? dimmedAlpha : 1f;
+            card.SetCardAlpha(dimmed ? dimmedAlpha : 1f);
         }
 
         /// <summary>

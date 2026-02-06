@@ -1,6 +1,7 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using UnityEngine.Experimental.GlobalIllumination;
 
 namespace CommandInput.UI
 {
@@ -20,6 +21,7 @@ namespace CommandInput.UI
         [Tooltip("기본 색상 (입력 안 됨)")]
         [SerializeField] private Color defaultColor = new Color(0.5f, 0.5f, 0.5f, 1f); // 회색
 
+
         [Tooltip("입력된 색상")]
         [SerializeField] private Color inputColor = Color.white; // 하얀색
 
@@ -29,12 +31,14 @@ namespace CommandInput.UI
 
         private CommandData commandData;
         private Image[] directionIcons;
+        private CanvasGroup canvasGroup;
 
         /// <summary>
         /// 카드 초기화
         /// </summary>
         public void Setup(CommandData command)
         {
+            canvasGroup = GetComponent<CanvasGroup>();
             commandIconTemplate.gameObject.SetActive(false);
 
             commandData = command;
@@ -176,6 +180,14 @@ namespace CommandInput.UI
         public int GetPatternLength()
         {
             return commandData?.pattern?.Length ?? 0;
+        }
+
+        public void SetCardAlpha(float alpha)
+        {
+            if (canvasGroup != null)
+            {
+                canvasGroup.alpha = alpha;
+            }
         }
     }
 }
