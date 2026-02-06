@@ -1,6 +1,6 @@
 {
   "name": "com.povet.commandinput",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "displayName": "Command Input System",
   "description": "Command input management system for Unity",
   "unity": "2020.1",
@@ -15,8 +15,8 @@
   },
   "samples": [
     {
-      "displayName": "Basic Examples",
-      "description": "Basic command input examples",
+      "displayName": "HELLDIVERS2 Stratagem command Input",
+      "description": "HELLDIVERS2 Stratagem command Input examples",
       "path": "Samples~/Examples"
     }
   ]
