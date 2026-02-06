@@ -1,0 +1,23 @@
+{
+  "name": "com.Povet.commandinput",
+  "version": "1.0.0",
+  "displayName": "Command Input System",
+  "description": "Command input management system for Unity",
+  "unity": "2020.1",
+  "keywords": [
+    "input",
+    "command",
+    "pattern"
+  ],
+  "author": {
+    "name": "Povet",
+    "email": "povet34@gmail.com"
+  },
+  "samples": [
+    {
+      "displayName": "Basic Examples",
+      "description": "Basic command input examples",
+      "path": "Samples~/Examples"
+    }
+  ]
+}
