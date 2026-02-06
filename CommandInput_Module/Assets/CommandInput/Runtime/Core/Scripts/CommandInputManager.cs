@@ -1,9 +1,21 @@
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
 
 namespace CommandInput
 {
+    /// <summary>
+    /// 커맨드 입력 상태
+    /// </summary>
+    public enum CommandInputState
+    {
+        Idle,              // 대기 중 (입력 없음)
+        Inputting,         // 입력 중
+        Completed,         // 커맨드 완성 (실행 대기)
+        Executing          // 실행 중
+    }
+
     /// <summary>
     /// 커맨드 입력 시스템 통합 매니저
     /// 모든 컴포넌트를 통합하여 커맨드 입력을 관리
@@ -16,6 +28,7 @@ namespace CommandInput
 
         [Header("Execute Key")]
         [Tooltip("커맨드 실행 키 (None이면 자동 실행)")]
+        [SerializeField] private bool useExecuteKey = false;
         [SerializeField] private KeyCode executeKey = KeyCode.Space;
 
         [Header("Events")]
@@ -34,8 +47,8 @@ namespace CommandInput
         private CommandMatcher commandMatcher;
 
         // 상태
+        private CommandInputState currentState = CommandInputState.Idle;
         private float inputStartTime;
-        private bool isInputActive = false;
         private List<CommandMatchResult> currentMatches = new List<CommandMatchResult>();
 
         private void Awake()
@@ -78,7 +91,12 @@ namespace CommandInput
                 return;
 
             HandleInput();
-            CheckTimeout();
+
+            // Inputting 상태일 때만 타임아웃 체크
+            if (currentState == CommandInputState.Inputting)
+            {
+                CheckTimeout();
+            }
         }
 
         /// <summary>
@@ -94,14 +112,22 @@ namespace CommandInput
                 OnDirectionInput(newDirection);
             }
 
-            // 실행 키 체크
-            if (executeKey != KeyCode.None && Input.GetKeyDown(executeKey))
+            // 실행 키 체크 (Completed 상태일 때만)
+            if (executeKey != KeyCode.None)
             {
-                TryExecuteCommand();
+                if (useExecuteKey && !Input.GetKeyDown(executeKey))
+                    return;
+
+                if (currentState == CommandInputState.Completed)
+                {
+                    TryExecuteCommand();
+                }
             }
 
             // 조이스틱 중립 체크 (키보드는 무시)
-            if (IsUsingAnalogInput() && input.magnitude < inputConfig.deadzone && isInputActive)
+            if (IsUsingAnalogInput() &&
+                input.magnitude < inputConfig.deadzone &&
+                (currentState == CommandInputState.Inputting || currentState == CommandInputState.Completed))
             {
                 OnInputNeutral();
             }
@@ -114,10 +140,6 @@ namespace CommandInput
         {
             Vector2 input = directionalInput.GetDirectionalInput();
 
-            // 키보드는 정확히 (1,0), (0,1) 같은 값
-            // 조이스틱은 (0.87, 0.43) 같은 값
-
-            // 간단한 휴리스틱: x, y가 둘 다 0 또는 1이 아니면 아날로그
             if (input.magnitude > 0.01f)
             {
                 float absX = Mathf.Abs(input.x);
@@ -133,13 +155,65 @@ namespace CommandInput
         }
 
         /// <summary>
+        /// 방향 입력 발생
+        /// </summary>
+        private void OnDirectionInput(InputDirection direction)
+        {
+            if (currentState == CommandInputState.Idle || currentState == CommandInputState.Completed)
+            {
+                ChangeState(CommandInputState.Inputting);
+                inputStartTime = Time.time;
+            }
+
+            // 매칭 엔진에 입력 추가
+            currentMatches = commandMatcher.AddInput(direction);
+
+            // 매칭 변경 이벤트 발생
+            onMatchingCommandsChanged?.Invoke(currentMatches);
+
+            // 완성 체크
+            CheckCompletedCommands();
+        }
+
+        /// <summary>
+        /// 완성된 커맨드 체크
+        /// </summary>
+        private void CheckCompletedCommands()
+        {
+            foreach (var match in currentMatches)
+            {
+                if (match.isComplete)
+                {
+                    // 상태 전이: Inputting → Completed
+                    ChangeState(CommandInputState.Completed);
+                    Debug.Log($"Command completed: {match.command.displayName} (similarity: {match.similarity:P0})");
+                    return;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 입력 중립 상태로 돌아옴 (조이스틱)
+        /// </summary>
+        private void OnInputNeutral()
+        {
+            if (currentState == CommandInputState.Completed)
+            {
+                // 완성된 커맨드 실행
+                TryExecuteCommand();
+            }
+            else if (currentState == CommandInputState.Inputting)
+            {
+                // 미완성 → 초기화
+                ClearInput();
+            }
+        }
+
+        /// <summary>
         /// 커맨드 실행 시도
         /// </summary>
         private void TryExecuteCommand()
         {
-            if (!isInputActive)
-                return;
-
             var completedCommand = commandMatcher.GetBestCompletedMatch();
             if (completedCommand != null)
             {
@@ -153,81 +227,24 @@ namespace CommandInput
         }
 
         /// <summary>
-        /// 방향 입력 발생
-        /// </summary>
-        private void OnDirectionInput(InputDirection direction)
-        {
-            // 첫 입력이면 시작 시간 기록
-            if (!isInputActive)
-            {
-                isInputActive = true;
-                inputStartTime = Time.time;
-            }
-
-            // 매칭 엔진에 입력 추가
-            currentMatches = commandMatcher.AddInput(direction);
-
-            // 매칭 변경 이벤트 발생
-            onMatchingCommandsChanged?.Invoke(currentMatches);
-
-            // 완성된 커맨드 체크
-            CheckCompletedCommands();
-        }
-
-        /// <summary>
-        /// 입력 중립 상태로 돌아옴
-        /// </summary>
-        private void OnInputNeutral()
-        {
-            // 완성된 커맨드가 있으면 실행
-            var completedCommand = commandMatcher.GetBestCompletedMatch();
-            if (completedCommand != null)
-            {
-                ExecuteCommand(completedCommand.command);
-            }
-            else
-            {
-                // 완성 안 됐으면 그냥 초기화
-                ClearInput();
-            }
-        }
-
-        /// <summary>
-        /// 완성된 커맨드 체크
-        /// </summary>
-        private void CheckCompletedCommands()
-        {
-            foreach (var match in currentMatches)
-            {
-                if (match.isComplete)
-                {
-                    Debug.Log($"Command completed: {match.command.displayName} (similarity: {match.similarity:P0})");
-                }
-            }
-        }
-
-        /// <summary>
         /// 커맨드 실행
         /// </summary>
         private void ExecuteCommand(CommandData command)
         {
+            ChangeState(CommandInputState.Executing);
+
             Debug.Log($"<color=green>Command Executed: {command.displayName}</color>");
 
-            // 매니저 이벤트 발생
             onCommandExecuted?.Invoke(command);
 
-            // 입력 초기화
             ClearInput();
         }
 
         /// <summary>
-        /// 타임아웃 체크
+        /// 타임아웃 체크 (Inputting 상태일 때만)
         /// </summary>
         private void CheckTimeout()
         {
-            if (!isInputActive)
-                return;
-
             // 가장 긴 제한 시간 찾기
             float maxDuration = 0f;
             foreach (var match in currentMatches)
@@ -243,10 +260,20 @@ namespace CommandInput
             if (Time.time - inputStartTime > maxDuration)
             {
                 Debug.Log("<color=yellow>Input timeout</color>");
-
-                // 입력 초기화만
                 ClearInput();
             }
+        }
+
+        /// <summary>
+        /// 상태 변경
+        /// </summary>
+        private void ChangeState(CommandInputState newState)
+        {
+            if (currentState == newState)
+                return;
+
+            Debug.Log($"State: {currentState} → {newState}");
+            currentState = newState;
         }
 
         /// <summary>
@@ -257,12 +284,20 @@ namespace CommandInput
             commandMatcher.Clear();
             inputTracker.Clear();
             currentMatches.Clear();
-            isInputActive = false;
+
+            ChangeState(CommandInputState.Idle);
 
             onInputCleared?.Invoke();
         }
 
-        // === Public API ===
+
+        /// <summary>
+        /// 현재 입력 상태
+        /// </summary>
+        public CommandInputState GetCurrentState()
+        {
+            return currentState;
+        }
 
         /// <summary>
         /// 현재 입력 히스토리
@@ -285,7 +320,7 @@ namespace CommandInput
         /// </summary>
         public bool IsInputActive()
         {
-            return isInputActive;
+            return currentState != CommandInputState.Idle;
         }
 
         /// <summary>

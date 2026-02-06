@@ -1,13 +1,13 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using UnityEngine.Experimental.GlobalIllumination;
+using System.Collections.Generic;
 
 namespace CommandInput.UI
 {
     /// <summary>
     /// 개별 Stratagem 카드 UI
-    /// 커맨드 정보와 입력 진행도를 표시
+    /// 스스로 매칭 판단하고 UI 업데이트
     /// </summary>
     public class StratagemCardUI : MonoBehaviour
     {
@@ -19,67 +19,66 @@ namespace CommandInput.UI
 
         [Header("Visual Settings")]
         [Tooltip("기본 색상 (입력 안 됨)")]
-        [SerializeField] private Color defaultColor = new Color(0.5f, 0.5f, 0.5f, 1f); // 회색
-
+        [SerializeField] private Color defaultColor = new Color(0.5f, 0.5f, 0.5f, 1f);
 
         [Tooltip("입력된 색상")]
-        [SerializeField] private Color inputColor = Color.white; // 하얀색
+        [SerializeField] private Color inputColor = Color.white;
+
+        [Tooltip("딤드 알파값")]
+        [SerializeField] private float dimmedAlpha = 0.3f;
 
         [Header("Arrow Settings")]
         [Tooltip("화살표 기본 방향 (0도 = Right)")]
         [SerializeField] private float defaultArrowRotation = 0f;
 
-        private CommandData commandData;
+        private CommandData myCommand;
         private Image[] directionIcons;
         private CanvasGroup canvasGroup;
 
         /// <summary>
         /// 카드 초기화
         /// </summary>
-        public void Setup(CommandData command)
+        public void Initialize(CommandData command)
         {
+            myCommand = command;
+
             canvasGroup = GetComponent<CanvasGroup>();
-            commandIconTemplate.gameObject.SetActive(false);
 
-            commandData = command;
+            // UI 설정
+            SetupUI();
+            CreatePatternIcons();
 
-            // 커맨드 이름 설정
+            // 이벤트 구독
+            SubscribeEvents();
+        }
+
+        private void SetupUI()
+        {
             if (commandText != null)
             {
-                commandText.text = command.displayName.ToUpper();
+                commandText.text = myCommand.displayName.ToUpper();
             }
 
-            // 아이콘 설정
-            if (icon != null && command.icon != null)
+            if (icon != null && myCommand.icon != null)
             {
-                icon.sprite = command.icon;
+                icon.sprite = myCommand.icon;
                 icon.enabled = true;
             }
             else if (icon != null)
             {
                 icon.enabled = false;
             }
-
-            // 필요한 입력 패턴 표시
-            CreatePatternIcons();
         }
 
-        /// <summary>
-        /// 입력 패턴 아이콘 생성
-        /// </summary>
         private void CreatePatternIcons()
         {
-            if (commandArea == null || commandIconTemplate == null || commandData == null)
+            if (commandArea == null || commandIconTemplate == null || myCommand == null)
                 return;
 
-            // 기존 아이콘 제거
-            ClearPatternIcons();
-
-            var pattern = commandData.pattern;
+            var pattern = myCommand.pattern;
             if (pattern == null || pattern.Length == 0)
                 return;
 
-            // 패턴 길이만큼 아이콘 생성
             directionIcons = new Image[pattern.Length];
 
             for (int i = 0; i < pattern.Length; i++)
@@ -92,70 +91,96 @@ namespace CommandInput.UI
                 {
                     directionIcons[i] = iconImage;
 
-                    // 회전 적용 (InputDirection의 각도 값 사용)
+                    // 회전 적용
                     float angle = DirectionalInputHelper.DirectionToAngle(pattern[i]);
                     iconObj.transform.rotation = Quaternion.Euler(0, 0, angle + defaultArrowRotation);
 
-                    // 기본 색상 (회색)
+                    // 기본 색상
                     iconImage.color = defaultColor;
                 }
             }
         }
 
-        /// <summary>
-        /// 기존 패턴 아이콘 제거
-        /// </summary>
-        private void ClearPatternIcons()
+        private void SubscribeEvents()
         {
-            if (commandArea == null)
-                return;
+            StratagemDisplayManager.OnMatchingResultsUpdated += OnMatchingResultsHandler;
+            StratagemDisplayManager.OnInputCleared += OnInputClearedHandler;
+            StratagemDisplayManager.OnCommandExecuted += OnCommandExecutedHandler;
+        }
 
-            // Template 제외하고 모두 삭제
-            foreach (Transform child in commandArea)
+        /// <summary>
+        /// 매칭 결과 업데이트
+        /// </summary>
+        private void OnMatchingResultsHandler(List<CommandMatchResult> results)
+        {
+            if (results == null || results.Count == 0)
             {
-                if (child.gameObject != commandIconTemplate)
-                {
-                    Destroy(child.gameObject);
-                }
+                // 매칭 없음
+                ResetProgress();
+                SetDimmed(false);
+                return;
             }
 
-            directionIcons = null;
+            // 자기 것 찾기
+            CommandMatchResult myResult = results.Find(r => r.command.commandId == myCommand.commandId);
+
+            if (myResult != null)
+            {
+                // 매칭됨
+                int inputCount = Mathf.RoundToInt(myResult.progress * myCommand.pattern.Length);
+                UpdateProgress(inputCount);
+                SetDimmed(false);
+            }
+            else
+            {
+                // 매칭 안 됨 (다른 커맨드가 매칭 중)
+                ResetProgress();
+                SetDimmed(true);
+            }
+        }
+
+        /// <summary>
+        /// 입력 초기화
+        /// </summary>
+        private void OnInputClearedHandler()
+        {
+            ResetProgress();
+            SetDimmed(false);
+        }
+
+        /// <summary>
+        /// 커맨드 실행
+        /// </summary>
+        private void OnCommandExecutedHandler(string commandId)
+        {
+            if (commandId == myCommand.commandId)
+            {
+                // 실행 애니메이션 (TODO)
+                Debug.Log($"Card {myCommand.displayName} executed!");
+            }
         }
 
         /// <summary>
         /// 진행도 업데이트
         /// </summary>
-        /// <param name="inputCount">현재 입력된 개수</param>
-        public void UpdateProgress(int inputCount)
+        private void UpdateProgress(int inputCount)
         {
-            if (directionIcons == null)
-                return;
+            if (directionIcons == null) return;
 
             for (int i = 0; i < directionIcons.Length; i++)
             {
-                if (directionIcons[i] == null)
-                    continue;
+                if (directionIcons[i] == null) continue;
 
-                if (i < inputCount)
-                {
-                    // 입력된 부분 - 하얀색
-                    directionIcons[i].color = inputColor;
-                }
-                else
-                {
-                    // 아직 입력 안 된 부분 - 회색
-                    directionIcons[i].color = defaultColor;
-                }
+                directionIcons[i].color = i < inputCount ? inputColor : defaultColor;
             }
         }
 
         /// <summary>
-        /// 진행도 초기화 (모두 회색으로)
+        /// 진행도 리셋
         /// </summary>
-        public void ResetProgress()
+        private void ResetProgress()
         {
-            if (directionIcons == null)
-                return;
+            if (directionIcons == null) return;
 
             foreach (var icon in directionIcons)
             {
@@ -167,27 +192,21 @@ namespace CommandInput.UI
         }
 
         /// <summary>
-        /// 현재 커맨드 데이터
+        /// 딤드 처리
         /// </summary>
-        public CommandData GetCommandData()
-        {
-            return commandData;
-        }
-
-        /// <summary>
-        /// 패턴 길이
-        /// </summary>
-        public int GetPatternLength()
-        {
-            return commandData?.pattern?.Length ?? 0;
-        }
-
-        public void SetCardAlpha(float alpha)
+        private void SetDimmed(bool dimmed)
         {
             if (canvasGroup != null)
             {
-                canvasGroup.alpha = alpha;
+                canvasGroup.alpha = dimmed ? dimmedAlpha : 1f;
             }
+        }
+
+        private void OnDestroy()
+        {
+            StratagemDisplayManager.OnMatchingResultsUpdated -= OnMatchingResultsHandler;
+            StratagemDisplayManager.OnInputCleared -= OnInputClearedHandler;
+            StratagemDisplayManager.OnCommandExecuted -= OnCommandExecutedHandler;
         }
     }
 }

@@ -788,12 +788,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CommandInput.UI.StratagemDisplayManager
   commandInputManager: {fileID: 87861126}
-  stratagemArea: {fileID: 209779078}
-  stratagemCardPrefab: {fileID: 5779539043986883604, guid: 0a3a45e1f30f0ed4288747ba3ba63b73, type: 3}
+  cardContainer: {fileID: 209779078}
+  cardPrefab: {fileID: 5779539043986883604, guid: 0a3a45e1f30f0ed4288747ba3ba63b73, type: 3}
   commandCollection: {fileID: 11400000, guid: 2880d085a254eb141821b90c9254cc5b, type: 2}
   commands: []
-  showAllCardsInitially: 1
-  dimmedAlpha: 0.3
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

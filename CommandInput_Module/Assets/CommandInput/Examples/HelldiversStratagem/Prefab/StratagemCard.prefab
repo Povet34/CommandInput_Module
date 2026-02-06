@@ -87,7 +87,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &2605341055893842273
 RectTransform:
   m_ObjectHideFlags: 0
@@ -102,10 +102,10 @@ RectTransform:
   m_Children: []
   m_Father: {fileID: 6623785454970044763}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 20, y: -20}
+  m_SizeDelta: {x: 40, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &6360248715968656068
 CanvasRenderer:
@@ -275,6 +275,7 @@ MonoBehaviour:
   commandIconTemplate: {fileID: 5430529936879484267}
   defaultColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   inputColor: {r: 1, g: 1, b: 1, a: 1}
+  dimmedAlpha: 0.3
   defaultArrowRotation: 0
 --- !u!225 &7668218269980331336
 CanvasGroup:
